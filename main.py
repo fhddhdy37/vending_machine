@@ -4,7 +4,11 @@ from package.machine import Machine
 from package.drink import Drink
 
 def main() -> None:
-    """자판기 프로그램의 진입점."""
+    """자판기 프로그램의 진입점.
+
+    ``tk.Tk`` 루트 윈도우를 생성하고 :class:`Machine` 객체를 초기화한 뒤,
+    ``drink_infos`` 목록을 활용하여 기본 음료 재고를 채운다.
+    """
     root = tk.Tk()
     machine = Machine(root)
     

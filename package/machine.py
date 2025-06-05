@@ -8,10 +8,23 @@ from .drink import Drink
 
 
 class Machine:
-    """자판기의 GUI 동작을 담당하는 클래스."""
+    """자판기의 GUI 동작을 담당하는 클래스.
+
+    ``root``에 배치된 GUI 요소를 관리하며 ``controller``를 통해 비즈니스 로직을
+    수행한다. ``images``와 ``buttons`` 리스트는 동적으로 생성된 위젯과 이미지를
+    보관한다.
+    """
 
     def __init__(self, root: tk.Tk) -> None:
-        """GUI를 초기화하고 컨트롤러를 생성한다."""
+        """GUI를 초기화하고 컨트롤러를 생성한다.
+
+        Parameters
+        ----------
+        root : :class:`tk.Tk`
+            최상위 윈도우 객체로, 자판기 화면이 표시될 대상이다.
+
+        ``controller``를 생성하고 ``images``와 ``buttons`` 리스트를 준비한다.
+        """
         self.root = root
         self.controller = Controller()
         self.root.title("자판기 시스템")
@@ -23,7 +36,12 @@ class Machine:
         self.build_frame()
 
     def build_frame(self) -> None:
-        """버튼과 화면 요소를 생성하여 GUI를 구성한다."""
+        """버튼과 화면 요소를 생성하여 GUI를 구성한다.
+
+        ``controller.drinks`` 정보를 사용하여 음료 버튼을 만들고 ``buttons``와
+        ``images`` 리스트에 저장한다. 금액 표시용 ``cash_label``과 각종 제어
+        위젯들도 이 단계에서 생성된다.
+        """
         # 카드 처리 중 위젯 제어를 쉽게 하기 위해 목록을 관리
         self.buttons.clear()
 
@@ -165,25 +183,40 @@ class Machine:
         self.buttons.append(admin_btn)
 
     def refresh_gui(self) -> None:
-        """화면을 초기화하고 다시 그린다."""
+        """화면을 초기화하고 다시 그린다.
+
+        ``root`` 하위의 모든 위젯을 제거한 뒤 :py:meth:`build_frame`을
+        호출하여 최신 상태를 반영한다.
+        """
         for widget in self.root.winfo_children():
             widget.destroy()
         self.build_frame()
 
     def disable_widgets(self) -> None:
-        """카드 결제 처리 중에는 모든 위젯을 비활성화한다."""
+        """카드 결제 처리 중에는 모든 위젯을 비활성화한다.
+
+        ``buttons`` 리스트에 저장된 위젯과 ``card_entry`` 입력창의 ``state`` 값을
+        변경하여 사용자가 조작할 수 없도록 한다.
+        """
         for btn in self.buttons:
             btn.config(state=tk.DISABLED)
         self.card_entry.config(state=tk.DISABLED)
 
     def enable_widgets(self) -> None:
-        """카드 결제 완료 후 모든 위젯을 다시 활성화한다."""
+        """카드 결제 완료 후 모든 위젯을 다시 활성화한다.
+
+        ``disable_widgets``에서 비활성화한 위젯들의 ``state``를 되돌린다.
+        """
         for btn in self.buttons:
             btn.config(state=tk.NORMAL)
         self.card_entry.config(state=tk.NORMAL)
 
     def insert_cash(self) -> None:
-        """투입된 금액을 컨트롤러에 전달한다."""
+        """투입된 금액을 컨트롤러에 전달한다.
+
+        ``cash_var``에 설정된 화폐 단위를 ``controller.input_cash``에 전달하여
+        ``inserted_cash`` 값을 증가시키고, ``cash_label``에 즉시 반영한다.
+        """
         amount = self.cash_var.get()
         self.controller.input_cash({amount: 1})
         # Update only the cash label instead of rebuilding the entire GUI
@@ -192,7 +225,11 @@ class Machine:
         )
 
     def refund(self) -> None:
-        """투입된 금액을 환불하고 거스름돈을 표시한다."""
+        """투입된 금액을 환불하고 거스름돈을 표시한다.
+
+        ``controller.refund_cash``로 계산된 거스름돈을 메시지 박스로 보여주고
+        ``cash_label``을 0원으로 갱신한다.
+        """
         change = self.controller.refund_cash()
         msg = "\n".join([f"{k}원: {v}개" for k, v in change.items()])
         messagebox.showinfo("거스름돈 반환", msg or "반환할 금액이 없습니다.")
@@ -200,7 +237,11 @@ class Machine:
         self.cash_label.config(text="0원")
 
     def use_card(self) -> None:
-        """카드 번호를 입력받아 카드 삽입을 시도한다."""
+        """카드 번호를 입력받아 카드 삽입을 시도한다.
+
+        ``card_entry``에서 번호를 읽어 ``controller.card.insert_card``를 호출한
+        뒤 결과에 따라 ``card_status`` 라벨을 갱신한다.
+        """
         number = self.card_entry.get()
         if not number:
             messagebox.showwarning("카드 투입", "카드 번호를 입력해주세요.")
@@ -211,7 +252,16 @@ class Machine:
             messagebox.showerror("카드 오류", "유효하지 않은 카드")
 
     def select_drink(self, drink: Drink) -> None:
-        """음료 버튼 클릭 시 결제 여부를 판단하여 제공한다."""
+        """음료 버튼 클릭 시 결제 여부를 판단하여 제공한다.
+
+        Parameters
+        ----------
+        drink : :class:`Drink`
+            선택된 음료 객체.
+
+        카드가 삽입되어 있으면 ``complete_card_payment``를 예약하고, 그렇지
+        않으면 ``controller.dispense`` 결과를 메시지로 출력한다.
+        """
         # 카드가 삽입되었다면 먼저 카드 결제를 진행
         if self.controller.card.inserted and not self.controller.card.status:
             if drink.count <= 0:
@@ -227,7 +277,16 @@ class Machine:
             self.refresh_gui()
 
     def complete_card_payment(self, drink: Drink) -> None:
-        """승인 지연 후 카드 결제를 마무리한다."""
+        """승인 지연 후 카드 결제를 마무리한다.
+
+        Parameters
+        ----------
+        drink : :class:`Drink`
+            결제를 시도한 음료 객체.
+
+        ``controller.card``의 상태를 승인으로 변경한 뒤 ``dispense``를 호출하고
+        UI 요소를 원래대로 복구한다.
+        """
         self.controller.card.approve()
         result = self.controller.dispense(drink)
         self.card_status.config(text="카드 상태: 승인 완료")
@@ -241,7 +300,11 @@ class Machine:
         self.enable_widgets()
 
     def admin_menu(self) -> None:
-        """관리자용 현금 및 재고 관리 창을 연다."""
+        """관리자용 현금 및 재고 관리 창을 연다.
+
+        ``cashes``와 ``drinks`` 값을 조정할 수 있는 별도 창을 생성하여 보여주며
+        창이 닫힐 때 ``apply_changes`` 내부 함수로 변경 사항을 반영한다.
+        """
         self.disable_widgets()
         window = tk.Toplevel(self.root)
         window.title("관리자 메뉴")
@@ -300,7 +363,18 @@ class Machine:
         tk.Button(window, text="닫기", command=on_close).pack(pady=5)
 
     def load_image(self, path: str, size=(70, 70)) -> ImageTk.PhotoImage:
-        """이미지 파일을 로드하고 지정 크기로 변환한다."""
+        """이미지 파일을 로드하고 지정 크기로 변환한다.
+
+        Parameters
+        ----------
+        path : str
+            이미지 파일 경로.
+        size : tuple[int, int], optional
+            불러올 이미지의 크기. 기본값은 ``(70, 70)``.
+
+        경로가 없으면 회색 이미지로 대체하고, ``images`` 목록에 저장되지 않은
+        새 :class:`ImageTk.PhotoImage` 객체를 반환한다.
+        """
         if not os.path.exists(path):
             img = Image.new("RGB", size, color="gray")
         else:
