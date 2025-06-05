@@ -41,8 +41,7 @@ def main() -> None:
     # Fill the vending machine with drinks. Images will be displayed on buttons.
     for i in range(24):
         name, price, image = drink_infos[i % len(drink_infos)]
-        count = 0 if i % 2 == 0 else 5
-        machine.controller.add_drinks(Drink(name, price, count, image))
+        machine.controller.add_drinks(Drink(name, price, 10, image))
         
     machine.refresh_gui()
     root.mainloop()
