@@ -8,9 +8,10 @@ from .drink import Drink
 
 
 class Machine:
-    """GUI logic for the vending machine."""
+    """자판기의 GUI 동작을 담당하는 클래스."""
 
     def __init__(self, root: tk.Tk) -> None:
+        """GUI를 초기화하고 컨트롤러를 생성한다."""
         self.root = root
         self.controller = Controller()
         self.root.title("자판기 시스템")
@@ -22,8 +23,8 @@ class Machine:
         self.build_frame()
 
     def build_frame(self) -> None:
-        # keep a list of all interactive widgets so we can easily
-        # enable/disable them during card processing
+        """버튼과 화면 요소를 생성하여 GUI를 구성한다."""
+        # 카드 처리 중 위젯 제어를 쉽게 하기 위해 목록을 관리
         self.buttons.clear()
 
         drink_frame = tk.Frame(self.root, bg="black")
@@ -164,23 +165,25 @@ class Machine:
         self.buttons.append(admin_btn)
 
     def refresh_gui(self) -> None:
+        """화면을 초기화하고 다시 그린다."""
         for widget in self.root.winfo_children():
             widget.destroy()
         self.build_frame()
 
     def disable_widgets(self) -> None:
-        """Disable all interactive widgets during card processing."""
+        """카드 결제 처리 중에는 모든 위젯을 비활성화한다."""
         for btn in self.buttons:
             btn.config(state=tk.DISABLED)
         self.card_entry.config(state=tk.DISABLED)
 
     def enable_widgets(self) -> None:
-        """Re-enable all interactive widgets after card processing."""
+        """카드 결제 완료 후 모든 위젯을 다시 활성화한다."""
         for btn in self.buttons:
             btn.config(state=tk.NORMAL)
         self.card_entry.config(state=tk.NORMAL)
 
     def insert_cash(self) -> None:
+        """투입된 금액을 컨트롤러에 전달한다."""
         amount = self.cash_var.get()
         self.controller.input_cash({amount: 1})
         # Update only the cash label instead of rebuilding the entire GUI
@@ -189,6 +192,7 @@ class Machine:
         )
 
     def refund(self) -> None:
+        """투입된 금액을 환불하고 거스름돈을 표시한다."""
         change = self.controller.refund_cash()
         msg = "\n".join([f"{k}원: {v}개" for k, v in change.items()])
         messagebox.showinfo("거스름돈 반환", msg or "반환할 금액이 없습니다.")
@@ -196,6 +200,7 @@ class Machine:
         self.cash_label.config(text="0원")
 
     def use_card(self) -> None:
+        """카드 번호를 입력받아 카드 삽입을 시도한다."""
         number = self.card_entry.get()
         if not number:
             messagebox.showwarning("카드 투입", "카드 번호를 입력해주세요.")
@@ -206,7 +211,8 @@ class Machine:
             messagebox.showerror("카드 오류", "유효하지 않은 카드")
 
     def select_drink(self, drink: Drink) -> None:
-        # If a card has been inserted, process card payment first
+        """음료 버튼 클릭 시 결제 여부를 판단하여 제공한다."""
+        # 카드가 삽입되었다면 먼저 카드 결제를 진행
         if self.controller.card.inserted and not self.controller.card.status:
             if drink.count <= 0:
                 messagebox.showinfo("음료 선택", "재고 없음")
@@ -221,7 +227,7 @@ class Machine:
             self.refresh_gui()
 
     def complete_card_payment(self, drink: Drink) -> None:
-        """Finalize card payment after the approval delay."""
+        """승인 지연 후 카드 결제를 마무리한다."""
         self.controller.card.approve()
         result = self.controller.dispense(drink)
         self.card_status.config(text="카드 상태: 승인 완료")
@@ -235,11 +241,12 @@ class Machine:
         self.enable_widgets()
 
     def admin_menu(self) -> None:
-        """Open the admin window for managing cash and inventory."""
+        """관리자용 현금 및 재고 관리 창을 연다."""
         self.disable_widgets()
         window = tk.Toplevel(self.root)
         window.title("관리자 메뉴")
 
+        # 창을 닫을 때 호출되는 내부 함수
         def on_close() -> None:
             apply_changes()
             self.enable_widgets()
@@ -281,6 +288,7 @@ class Machine:
                 tk.Entry(cell, width=5, textvariable=var).pack()
                 drink_vars.append(var)
 
+        # 입력된 값을 실제 데이터에 반영하는 내부 함수
         def apply_changes() -> None:
             for currency, var in cash_vars.items():
                 self.controller.cashes[currency] = max(0, var.get())
@@ -292,7 +300,7 @@ class Machine:
         tk.Button(window, text="닫기", command=on_close).pack(pady=5)
 
     def load_image(self, path: str, size=(70, 70)) -> ImageTk.PhotoImage:
-        """Load and resize the given image path safely."""
+        """이미지 파일을 로드하고 지정 크기로 변환한다."""
         if not os.path.exists(path):
             img = Image.new("RGB", size, color="gray")
         else:
