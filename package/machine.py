@@ -16,6 +16,7 @@ class Machine:
         self.root.title("자판기 시스템")
         # adjust window size as requested
         self.root.geometry("1000x500")
+        self.root.configure(bg="black")
         self.images: list[ImageTk.PhotoImage] = []
         self.build_frame()
 
@@ -46,20 +47,20 @@ class Machine:
                     self.images.append(img)
                     btn.grid(row=i, column=j, padx=5, pady=5)
 
-        right_frame = tk.Frame(self.root)
+        right_frame = tk.Frame(self.root, bg="black")
         right_frame.grid(row=0, column=1, sticky="n")
 
-        blue_panel = tk.Frame(right_frame, width=300, height=200, bg="blue")
-        blue_panel.pack_propagate(False)
-        blue_panel.pack(pady=5)
+        admin_panel = tk.Frame(right_frame, width=300, height=200, bg="black")
+        admin_panel.pack_propagate(False)
+        admin_panel.pack(pady=5)
 
-        orange_panel = tk.Frame(right_frame, bg="orange", width=300, height=50)
-        orange_panel.pack_propagate(False)
-        orange_panel.pack()
+        cash_panel = tk.Frame(right_frame, bg="black", width=300, height=50)
+        cash_panel.pack_propagate(False)
+        cash_panel.pack()
         self.cash_label = tk.Label(
-            orange_panel,
+            cash_panel,
             text=f"투입된 금액 : {self.controller.inserted_cash}원",
-            bg="orange",
+            bg="black",
             font=("맑은 고딕", 12),
         )
         self.cash_label.pack()
@@ -84,8 +85,8 @@ class Machine:
         )
         self.card_status.pack(pady=5)
 
-        card_frame = tk.Frame(right_frame)
-        card_frame.pack(pady=5)
+        card_frame = tk.Frame(right_frame, bg="black")
+        card_frame.pack(pady=5, side="bottom")
 
         self.card_entry = tk.Entry(card_frame, width=20)
         self.card_entry.pack(side="left", padx=5)
@@ -99,9 +100,9 @@ class Machine:
         ).pack(side="left")
 
         # Use a keyhole image for the admin button and place it at the
-        # bottom-right corner of the blue panel
+        # bottom-right corner of the admin panel
         admin_img = self.load_image("src/drinks/keyhole.png")
-        admin_btn = tk.Button(blue_panel, image=admin_img, command=self.admin_menu, bg="white")
+        admin_btn = tk.Button(admin_panel, image=admin_img, command=self.admin_menu, bg="white")
         self.images.append(admin_img)
         admin_btn.place(relx=1.0, rely=1.0, anchor="se")
 
