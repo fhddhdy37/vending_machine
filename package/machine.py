@@ -16,6 +16,7 @@ class Machine:
         self.root.title("자판기 시스템")
         # adjust window size as requested
         self.root.geometry("1000x500")
+        self.root.configure(bg="black")
         self.images: list[ImageTk.PhotoImage] = []
         self.build_frame()
 
@@ -46,20 +47,20 @@ class Machine:
                     self.images.append(img)
                     btn.grid(row=i, column=j, padx=5, pady=5)
 
-        right_frame = tk.Frame(self.root)
+        right_frame = tk.Frame(self.root, bg="black")
         right_frame.grid(row=0, column=1, sticky="n")
 
-        blue_panel = tk.Frame(right_frame, width=300, height=200, bg="blue")
-        blue_panel.pack_propagate(False)
-        blue_panel.pack(pady=5)
+        admin_panel = tk.Frame(right_frame, width=300, height=200, bg="black")
+        admin_panel.pack_propagate(False)
+        admin_panel.pack(pady=5)
 
-        orange_panel = tk.Frame(right_frame, bg="orange", width=300, height=50)
-        orange_panel.pack_propagate(False)
-        orange_panel.pack()
+        cash_panel = tk.Frame(right_frame, bg="black", width=300, height=50)
+        cash_panel.pack_propagate(False)
+        cash_panel.pack()
         self.cash_label = tk.Label(
-            orange_panel,
+            cash_panel,
             text=f"투입된 금액 : {self.controller.inserted_cash}원",
-            bg="orange",
+            bg="black",
             font=("맑은 고딕", 12),
         )
         self.cash_label.pack()
@@ -73,14 +74,37 @@ class Machine:
         tk.Button(control_panel, text="반환", command=self.refund).grid(row=0, column=2, padx=5)
 
         self.card_status = tk.Label(
-            right_frame, text="카드 상태: 대기 중", bg="white", width=35
+            right_frame,
+            text="카드 상태: 대기 중",
+            bg="white",
+            width=35,
+            height=3,
+            highlightbackground="black",
+            highlightcolor="black",
+            highlightthickness=1,
         )
         self.card_status.pack(pady=5)
 
-        tk.Button(right_frame, text="카드 투입", bg="green", fg="white", command=self.use_card).pack()
+        card_frame = tk.Frame(right_frame, bg="black")
+        card_frame.pack(pady=5, side="bottom")
 
-        admin_btn = tk.Button(right_frame, text="🔑", command=self.admin_menu, bg="white")
-        admin_btn.place(relx=0.95, rely=0.95, anchor="se")
+        self.card_entry = tk.Entry(card_frame, width=20)
+        self.card_entry.pack(side="left", padx=5)
+
+        tk.Button(
+            card_frame,
+            text="카드 투입",
+            bg="green",
+            fg="white",
+            command=self.use_card,
+        ).pack(side="left")
+
+        # Use a keyhole image for the admin button and place it at the
+        # bottom-right corner of the admin panel
+        admin_img = self.load_image("src/drinks/keyhole.png")
+        admin_btn = tk.Button(admin_panel, image=admin_img, command=self.admin_menu, bg="white")
+        self.images.append(admin_img)
+        admin_btn.place(relx=1.0, rely=1.0, anchor="se")
 
     def refresh_gui(self) -> None:
         for widget in self.root.winfo_children():
@@ -90,13 +114,17 @@ class Machine:
     def insert_cash(self) -> None:
         amount = self.cash_var.get()
         self.controller.input_cash({amount: 1})
-        self.refresh_gui()
+        # Update only the cash label instead of rebuilding the entire GUI
+        self.cash_label.config(
+            text=f"투입된 금액 : {self.controller.inserted_cash}원"
+        )
 
     def refund(self) -> None:
         change = self.controller.refund_cash()
         msg = "\n".join([f"{k}원: {v}개" for k, v in change.items()])
         messagebox.showinfo("거스름돈 반환", msg or "반환할 금액이 없습니다.")
-        self.refresh_gui()
+        # Update the cash label to show that all inserted cash was returned
+        self.cash_label.config(text="투입된 금액 : 0원")
 
     def use_card(self) -> None:
         if self.controller.card.accept():
@@ -104,7 +132,6 @@ class Machine:
             messagebox.showinfo("카드 결제", "결제가 승인되었습니다.")
         else:
             self.card_status.config(text="카드 상태: 결제 실패")
-        self.refresh_gui()
 
     def select_drink(self, drink: Drink) -> None:
         result = self.controller.dispense(drink)
