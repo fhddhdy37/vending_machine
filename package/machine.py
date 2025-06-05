@@ -18,9 +18,14 @@ class Machine:
         self.root.geometry("948x431")
         self.root.configure(bg="black")
         self.images: list[ImageTk.PhotoImage] = []
+        self.buttons: list[tk.Widget] = []
         self.build_frame()
 
     def build_frame(self) -> None:
+        # keep a list of all interactive widgets so we can easily
+        # enable/disable them during card processing
+        self.buttons.clear()
+
         drink_frame = tk.Frame(self.root, bg="black")
         drink_frame.grid(row=0, column=0)
 
@@ -46,6 +51,7 @@ class Machine:
                     )
                     self.images.append(img)
                     btn.grid(row=i, column=j)
+                    self.buttons.append(btn)
 
         right_frame = tk.Frame(self.root, bg="black")
         right_frame.grid(row=0, column=1, sticky="ns")
@@ -93,9 +99,29 @@ class Machine:
         control_panel.pack()
 
         self.cash_var = tk.IntVar(value=1000)
-        tk.OptionMenu(control_panel, self.cash_var, 1000, 500, 100, 50).grid(row=0, column=0)
-        tk.Button(control_panel, text="투입", bg="green", fg="white", command=self.insert_cash).grid(row=0, column=1, padx=5)
-        tk.Button(control_panel, text="반환", bg="red", fg="white", command=self.refund).grid(row=0, column=2, padx=5)
+        self.cash_menu = tk.OptionMenu(control_panel, self.cash_var, 1000, 500, 100, 50)
+        self.cash_menu.grid(row=0, column=0)
+        self.buttons.append(self.cash_menu)
+
+        self.insert_button = tk.Button(
+            control_panel,
+            text="투입",
+            bg="green",
+            fg="white",
+            command=self.insert_cash,
+        )
+        self.insert_button.grid(row=0, column=1, padx=5)
+        self.buttons.append(self.insert_button)
+
+        self.refund_button = tk.Button(
+            control_panel,
+            text="반환",
+            bg="red",
+            fg="white",
+            command=self.refund,
+        )
+        self.refund_button.grid(row=0, column=2, padx=5)
+        self.buttons.append(self.refund_button)
 
         card_frame = tk.Frame(right_frame, bg="black")
         card_frame.pack(side="bottom", pady=5)
@@ -119,13 +145,15 @@ class Machine:
         self.card_entry = tk.Entry(entry_button_frame, width=20)
         self.card_entry.pack(side="left", padx=5)
 
-        tk.Button(
+        self.card_button = tk.Button(
             entry_button_frame,
             text="카드 투입",
             bg="green",
             fg="white",
             command=self.use_card,
-        ).pack(side="left", padx=5)
+        )
+        self.card_button.pack(side="left", padx=5)
+        self.buttons.append(self.card_button)
 
         # Use a keyhole image for the admin button and place it at the
         # bottom-right corner of the admin panel
@@ -133,11 +161,24 @@ class Machine:
         admin_btn = tk.Button(admin_panel, image=admin_img, command=self.admin_menu, bg="white")
         self.images.append(admin_img)
         admin_btn.place(relx=1.0, rely=1.0, anchor="se")
+        self.buttons.append(admin_btn)
 
     def refresh_gui(self) -> None:
         for widget in self.root.winfo_children():
             widget.destroy()
         self.build_frame()
+
+    def disable_widgets(self) -> None:
+        """Disable all interactive widgets during card processing."""
+        for btn in self.buttons:
+            btn.config(state=tk.DISABLED)
+        self.card_entry.config(state=tk.DISABLED)
+
+    def enable_widgets(self) -> None:
+        """Re-enable all interactive widgets after card processing."""
+        for btn in self.buttons:
+            btn.config(state=tk.NORMAL)
+        self.card_entry.config(state=tk.NORMAL)
 
     def insert_cash(self) -> None:
         amount = self.cash_var.get()
@@ -159,8 +200,10 @@ class Machine:
         if not number:
             messagebox.showwarning("카드 투입", "카드 번호를 입력해주세요.")
             return
-        self.controller.card.insert_card(number)
-        self.card_status.config(text="카드 상태: 결제 대기중")
+        if self.controller.card.insert_card(number):
+            self.card_status.config(text="카드 상태: 결제 대기중")
+        else:
+            messagebox.showerror("카드 오류", "유효하지 않은 카드")
 
     def select_drink(self, drink: Drink) -> None:
         # If a card has been inserted, process card payment first
@@ -169,6 +212,7 @@ class Machine:
                 messagebox.showinfo("음료 선택", "재고 없음")
                 return
             self.card_status.config(text="카드 상태: 결제 요청중")
+            self.disable_widgets()
             # After 2 seconds approve the card and dispense the drink
             self.root.after(2000, lambda d=drink: self.complete_card_payment(d))
         else:
@@ -188,6 +232,7 @@ class Machine:
         # reset card for next transaction
         self.controller.card.reset()
         self.card_entry.delete(0, tk.END)
+        self.enable_widgets()
 
     def admin_menu(self) -> None:
         messagebox.showinfo("관리자 모드", "관리자 메뉴로 진입합니다. (구현 예정)")
