@@ -1,7 +1,7 @@
 import tkinter as tk
 
-from src.machine import Machine
-from src.drink import Drink
+from package.machine import Machine
+from package.drink import Drink
 
 
 def main() -> None:
@@ -9,7 +9,10 @@ def main() -> None:
     machine = Machine(root)
 
     for i in range(24):
-        machine.controller.add_drinks(Drink("물", 500, 0 if i % 2 == 0 else 5))
+        image = "src/drinks/water.png"
+        machine.controller.add_drinks(
+            Drink("물", 500, 0 if i % 2 == 0 else 5, image)
+        )
 
     machine.refresh_gui()
     root.mainloop()

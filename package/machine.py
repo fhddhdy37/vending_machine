@@ -1,5 +1,7 @@
+import os
 import tkinter as tk
 from tkinter import messagebox
+from PIL import Image, ImageTk
 
 from .controller import Controller
 from .drink import Drink
@@ -14,6 +16,7 @@ class Machine:
         self.root.title("자판기 시스템")
         # adjust window size as requested
         self.root.geometry("1000x500")
+        self.images: list[ImageTk.PhotoImage] = []
         self.build_frame()
 
     def build_frame(self) -> None:
@@ -27,16 +30,20 @@ class Machine:
                     drink = self.controller.drinks[index]
                     state = "X 구매 불가" if drink.count <= 0 else f"{drink.price}원"
                     fg_color = "red" if drink.count <= 0 else "white"
+                    img = self.load_image(drink.image_path)
                     btn = tk.Button(
                         drink_frame,
                         text=f"{drink.name}\n{state}",
+                        image=img,
+                        compound="top",
                         fg=fg_color,
                         bg="black",
                         width=12,
-                        height=5,
+                        height=8,
                         command=lambda d=drink: self.select_drink(d),
                         relief="groove",
                     )
+                    self.images.append(img)
                     btn.grid(row=i, column=j, padx=5, pady=5)
 
         right_frame = tk.Frame(self.root)
@@ -106,3 +113,12 @@ class Machine:
 
     def admin_menu(self) -> None:
         messagebox.showinfo("관리자 모드", "관리자 메뉴로 진입합니다. (구현 예정)")
+
+    def load_image(self, path: str) -> ImageTk.PhotoImage:
+        """Load and resize the given image path safely."""
+        if not os.path.exists(path):
+            img = Image.new("RGB", (70, 70), color="gray")
+        else:
+            img = Image.open(path)
+        img = img.resize((70, 70))
+        return ImageTk.PhotoImage(img)
