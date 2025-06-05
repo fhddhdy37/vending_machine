@@ -4,6 +4,7 @@ from package.machine import Machine
 from package.drink import Drink
 
 def main() -> None:
+    """자판기 프로그램의 진입점."""
     root = tk.Tk()
     machine = Machine(root)
     
