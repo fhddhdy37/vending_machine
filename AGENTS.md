@@ -42,7 +42,7 @@
 ---
 
 ## 시스템 설계 순서도
-[Flow Chart 이미지 삽입](/src/refund_flow_chart.png)
+![Flow Chart 이미지 삽입](/src/refund_flow_chart.png)
 
 ---
 
