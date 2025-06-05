@@ -344,15 +344,29 @@ class Machine:
                 drink = self.controller.drinks[idx]
                 cell = tk.Frame(drink_frame)
                 cell.grid(row=i, column=j, padx=5, pady=5)
+        
+                # 음료 이미지
                 img = self.load_image(drink.image_path, (40, 40))
                 tk.Label(cell, image=img).pack()
                 admin_images.append(img)
+        
+                # 음료 이름
                 tk.Label(cell, text=drink.name).pack()
+        
+                # 재고 입력 필드
+                stock_frame = tk.Frame(cell)
+                stock_frame.pack(fill="x", pady=2)
+                tk.Label(stock_frame, text="재고:", anchor="w").pack(side="left")
                 var = tk.IntVar(value=drink.count)
-                tk.Entry(cell, width=5, textvariable=var).pack()
+                tk.Entry(stock_frame, width=5, textvariable=var).pack(side="left")
                 drink_vars.append(var)
+        
+                # 가격 입력 필드
+                price_frame = tk.Frame(cell)
+                price_frame.pack(fill="x", pady=2)
+                tk.Label(price_frame, text="가격:", anchor="w").pack(side="left")
                 price_var = tk.IntVar(value=drink.price)
-                tk.Entry(cell, width=5, textvariable=price_var).pack()
+                tk.Entry(price_frame, width=5, textvariable=price_var).pack(side="left")
                 price_vars.append(price_var)
 
         # 입력된 값을 실제 데이터에 반영하는 내부 함수
