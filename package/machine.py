@@ -320,6 +320,7 @@ class Machine:
         cash_vars: dict[int, tk.IntVar] = {}
         # use a list for drink variables to avoid hashing Drink instances
         drink_vars: list[tk.IntVar] = []
+        price_vars: list[tk.IntVar] = []
 
         cash_frame = tk.LabelFrame(window, text="현금 시재 관리")
         cash_frame.pack(fill="x", padx=10, pady=5)
@@ -350,13 +351,17 @@ class Machine:
                 var = tk.IntVar(value=drink.count)
                 tk.Entry(cell, width=5, textvariable=var).pack()
                 drink_vars.append(var)
+                price_var = tk.IntVar(value=drink.price)
+                tk.Entry(cell, width=5, textvariable=price_var).pack()
+                price_vars.append(price_var)
 
         # 입력된 값을 실제 데이터에 반영하는 내부 함수
         def apply_changes() -> None:
             for currency, var in cash_vars.items():
                 self.controller.cashes[currency] = max(0, var.get())
-            for drink, var in zip(self.controller.drinks, drink_vars):
-                drink.count = max(0, var.get())
+            for drink, c_var, p_var in zip(self.controller.drinks, drink_vars, price_vars):
+                drink.count = max(0, c_var.get())
+                drink.price = max(0, p_var.get())
             self.refresh_gui()
 
         tk.Button(window, text="저장", command=apply_changes).pack(pady=5)
