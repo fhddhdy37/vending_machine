@@ -73,11 +73,30 @@ class Machine:
         tk.Button(control_panel, text="반환", command=self.refund).grid(row=0, column=2, padx=5)
 
         self.card_status = tk.Label(
-            right_frame, text="카드 상태: 대기 중", bg="white", width=35
+            right_frame,
+            text="카드 상태: 대기 중",
+            bg="white",
+            width=35,
+            height=3,
+            highlightbackground="black",
+            highlightcolor="black",
+            highlightthickness=1,
         )
         self.card_status.pack(pady=5)
 
-        tk.Button(right_frame, text="카드 투입", bg="green", fg="white", command=self.use_card).pack()
+        card_frame = tk.Frame(right_frame)
+        card_frame.pack(pady=5)
+
+        self.card_entry = tk.Entry(card_frame, width=20)
+        self.card_entry.pack(side="left", padx=5)
+
+        tk.Button(
+            card_frame,
+            text="카드 투입",
+            bg="green",
+            fg="white",
+            command=self.use_card,
+        ).pack(side="left")
 
         # Use a keyhole image for the admin button and place it at the
         # bottom-right corner of the blue panel
@@ -108,7 +127,6 @@ class Machine:
             messagebox.showinfo("카드 결제", "결제가 승인되었습니다.")
         else:
             self.card_status.config(text="카드 상태: 결제 실패")
-        self.refresh_gui()
 
     def select_drink(self, drink: Drink) -> None:
         result = self.controller.dispense(drink)
