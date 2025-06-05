@@ -155,16 +155,39 @@ class Machine:
         self.cash_label.config(text="0원")
 
     def use_card(self) -> None:
-        if self.controller.card.accept():
-            self.card_status.config(text="카드 상태: 승인 완료")
-            messagebox.showinfo("카드 결제", "결제가 승인되었습니다.")
-        else:
-            self.card_status.config(text="카드 상태: 결제 실패")
+        number = self.card_entry.get()
+        if not number:
+            messagebox.showwarning("카드 투입", "카드 번호를 입력해주세요.")
+            return
+        self.controller.card.insert_card(number)
+        self.card_status.config(text="카드 상태: 결제 대기중")
 
     def select_drink(self, drink: Drink) -> None:
+        # If a card has been inserted, process card payment first
+        if self.controller.card.inserted and not self.controller.card.status:
+            if drink.count <= 0:
+                messagebox.showinfo("음료 선택", "재고 없음")
+                return
+            self.card_status.config(text="카드 상태: 결제 요청중")
+            # After 2 seconds approve the card and dispense the drink
+            self.root.after(2000, lambda d=drink: self.complete_card_payment(d))
+        else:
+            result = self.controller.dispense(drink)
+            messagebox.showinfo("음료 선택", result)
+            self.refresh_gui()
+
+    def complete_card_payment(self, drink: Drink) -> None:
+        """Finalize card payment after the approval delay."""
+        self.controller.card.approve()
         result = self.controller.dispense(drink)
-        messagebox.showinfo("음료 선택", result)
-        self.refresh_gui()
+        self.card_status.config(text="카드 상태: 승인 완료")
+        messagebox.showinfo("카드 결제", "결제가 완료되었습니다")
+        if result:
+            # Update inventory display
+            self.refresh_gui()
+        # reset card for next transaction
+        self.controller.card.reset()
+        self.card_entry.delete(0, tk.END)
 
     def admin_menu(self) -> None:
         messagebox.showinfo("관리자 모드", "관리자 메뉴로 진입합니다. (구현 예정)")
