@@ -79,8 +79,12 @@ class Machine:
 
         tk.Button(right_frame, text="카드 투입", bg="green", fg="white", command=self.use_card).pack()
 
-        admin_btn = tk.Button(right_frame, text="🔑", command=self.admin_menu, bg="white")
-        admin_btn.place(relx=0.95, rely=0.95, anchor="se")
+        # Use a keyhole image for the admin button and place it at the
+        # bottom-right corner of the blue panel
+        admin_img = self.load_image("src/drinks/keyhole.png")
+        admin_btn = tk.Button(blue_panel, image=admin_img, command=self.admin_menu, bg="white")
+        self.images.append(admin_img)
+        admin_btn.place(relx=1.0, rely=1.0, anchor="se")
 
     def refresh_gui(self) -> None:
         for widget in self.root.winfo_children():
