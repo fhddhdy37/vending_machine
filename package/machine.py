@@ -113,13 +113,17 @@ class Machine:
     def insert_cash(self) -> None:
         amount = self.cash_var.get()
         self.controller.input_cash({amount: 1})
-        self.refresh_gui()
+        # Update only the cash label instead of rebuilding the entire GUI
+        self.cash_label.config(
+            text=f"투입된 금액 : {self.controller.inserted_cash}원"
+        )
 
     def refund(self) -> None:
         change = self.controller.refund_cash()
         msg = "\n".join([f"{k}원: {v}개" for k, v in change.items()])
         messagebox.showinfo("거스름돈 반환", msg or "반환할 금액이 없습니다.")
-        self.refresh_gui()
+        # Update the cash label to show that all inserted cash was returned
+        self.cash_label.config(text="투입된 금액 : 0원")
 
     def use_card(self) -> None:
         if self.controller.card.accept():
