@@ -235,7 +235,61 @@ class Machine:
         self.enable_widgets()
 
     def admin_menu(self) -> None:
-        messagebox.showinfo("관리자 모드", "관리자 메뉴로 진입합니다. (구현 예정)")
+        """Open the admin window for managing cash and inventory."""
+        self.disable_widgets()
+        window = tk.Toplevel(self.root)
+        window.title("관리자 메뉴")
+
+        def on_close() -> None:
+            apply_changes()
+            self.enable_widgets()
+            window.destroy()
+
+        window.protocol("WM_DELETE_WINDOW", on_close)
+
+        cash_vars: dict[int, tk.IntVar] = {}
+        # use a list for drink variables to avoid hashing Drink instances
+        drink_vars: list[tk.IntVar] = []
+
+        cash_frame = tk.LabelFrame(window, text="현금 시재 관리")
+        cash_frame.pack(fill="x", padx=10, pady=5)
+
+        for idx, currency in enumerate(sorted(self.controller.cashes.keys(), reverse=True)):
+            tk.Label(cash_frame, text=f"{currency}원").grid(row=idx, column=0, padx=5, pady=2)
+            var = tk.IntVar(value=self.controller.cashes[currency])
+            tk.Entry(cash_frame, width=5, textvariable=var).grid(row=idx, column=1, padx=5, pady=2)
+            cash_vars[currency] = var
+
+        drink_frame = tk.LabelFrame(window, text="음료 재고 관리")
+        drink_frame.pack(fill="both", expand=True, padx=10, pady=5)
+
+        admin_images: list[ImageTk.PhotoImage] = []
+
+        for i in range(4):
+            for j in range(6):
+                idx = i * 6 + j
+                if idx >= len(self.controller.drinks):
+                    continue
+                drink = self.controller.drinks[idx]
+                cell = tk.Frame(drink_frame)
+                cell.grid(row=i, column=j, padx=5, pady=5)
+                img = self.load_image(drink.image_path, (40, 40))
+                tk.Label(cell, image=img).pack()
+                admin_images.append(img)
+                tk.Label(cell, text=drink.name).pack()
+                var = tk.IntVar(value=drink.count)
+                tk.Entry(cell, width=5, textvariable=var).pack()
+                drink_vars.append(var)
+
+        def apply_changes() -> None:
+            for currency, var in cash_vars.items():
+                self.controller.cashes[currency] = max(0, var.get())
+            for drink, var in zip(self.controller.drinks, drink_vars):
+                drink.count = max(0, var.get())
+            self.refresh_gui()
+
+        tk.Button(window, text="저장", command=apply_changes).pack(pady=5)
+        tk.Button(window, text="닫기", command=on_close).pack(pady=5)
 
     def load_image(self, path: str, size=(70, 70)) -> ImageTk.PhotoImage:
         """Load and resize the given image path safely."""
