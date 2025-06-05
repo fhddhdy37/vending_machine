@@ -38,8 +38,11 @@ class Controller:
     def dispense(self, drink: Drink) -> str:
         if drink.count <= 0:
             return "재고 없음"
-        if self.inserted_cash >= drink.price or self.card.status:
+        if self.inserted_cash >= drink.price:
             drink.count -= 1
             self.inserted_cash -= drink.price
+            return "음료 제공"
+        if self.card.status:
+            drink.count -= 1
             return "음료 제공"
         return "잔액 부족"
