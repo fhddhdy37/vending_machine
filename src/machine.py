@@ -12,12 +12,14 @@ class Machine:
         self.root = root
         self.controller = Controller()
         self.root.title("자판기 시스템")
+
         # adjust window size as requested
         self.root.geometry("1000x500")
         self.build_frame()
 
     def build_frame(self) -> None:
         drink_frame = tk.Frame(self.root, bg="black")
+
         drink_frame.grid(row=0, column=0, padx=5, pady=5)
 
         for i in range(4):
