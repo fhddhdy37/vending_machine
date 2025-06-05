@@ -12,12 +12,15 @@ class Machine:
         self.root = root
         self.controller = Controller()
         self.root.title("자판기 시스템")
-        self.root.geometry("1100x700")
+
+        # adjust window size as requested
+        self.root.geometry("1000x500")
         self.build_frame()
 
     def build_frame(self) -> None:
         drink_frame = tk.Frame(self.root, bg="black")
-        drink_frame.grid(row=0, column=0, padx=10, pady=10)
+
+        drink_frame.grid(row=0, column=0, padx=5, pady=5)
 
         for i in range(4):
             for j in range(6):
@@ -31,8 +34,8 @@ class Machine:
                         text=f"{drink.name}\n{state}",
                         fg=fg_color,
                         bg="black",
-                        width=14,
-                        height=6,
+                        width=12,
+                        height=5,
                         command=lambda d=drink: self.select_drink(d),
                         relief="groove",
                     )
@@ -41,11 +44,11 @@ class Machine:
         right_frame = tk.Frame(self.root)
         right_frame.grid(row=0, column=1, sticky="n")
 
-        blue_panel = tk.Frame(right_frame, width=400, height=300, bg="blue")
+        blue_panel = tk.Frame(right_frame, width=300, height=200, bg="blue")
         blue_panel.pack_propagate(False)
         blue_panel.pack(pady=5)
 
-        orange_panel = tk.Frame(right_frame, bg="orange", width=400, height=50)
+        orange_panel = tk.Frame(right_frame, bg="orange", width=300, height=50)
         orange_panel.pack_propagate(False)
         orange_panel.pack()
         self.cash_label = tk.Label(
@@ -64,7 +67,9 @@ class Machine:
         tk.Button(control_panel, text="투입", command=self.insert_cash).grid(row=0, column=1, padx=5)
         tk.Button(control_panel, text="반환", command=self.refund).grid(row=0, column=2, padx=5)
 
-        self.card_status = tk.Label(right_frame, text="카드 상태: 대기 중", bg="white", width=40)
+        self.card_status = tk.Label(
+            right_frame, text="카드 상태: 대기 중", bg="white", width=35
+        )
         self.card_status.pack(pady=5)
 
         tk.Button(right_frame, text="카드 투입", bg="green", fg="white", command=self.use_card).pack()
