@@ -38,8 +38,8 @@ class Machine:
                         compound="top",
                         fg=fg_color,
                         bg="black",
-                        width=12,
-                        height=8,
+                        width=100,
+                        height=100,
                         command=lambda d=drink: self.select_drink(d),
                         relief="groove",
                     )
